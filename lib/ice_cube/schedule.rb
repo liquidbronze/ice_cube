@@ -143,8 +143,21 @@ module IceCube
 
     # Find all occurrences until a certain date
     def occurrences(end_date)
-      end_date = @end_time if @end_time && @end_time < end_date
-      find_occurrences { |head| head.upto(end_date) }
+      exclude_dates, include_dates = Set.new(@exdates), SortedSet.new(@rdates)
+      # walk through each rule, adding it to dates
+      @rrule_occurrence_heads.each do |rrule_occurrence_head|
+        include_dates.merge(rrule_occurrence_head.upto(end_date))
+      end
+      # walk through each exrule, removing it from dates
+      @exrule_occurrence_heads.each do |exrule_occurrence_head|
+        exclude_dates.merge(exrule_occurrence_head.upto(end_date))
+      end
+      #return a unique list of dates
+      include_dates.reject! { |date| exclude_dates.include?(date) }
+      include_dates.to_a
+      
+      #end_date = @end_time if @end_time && @end_time < end_date
+      #find_occurrences { |head| head.upto(end_date) }
     end
 
     # Find remaining occurrences
